@@ -1,0 +1,5 @@
+module NetworkDemo
+Main 1.0 main.qml
+TCPServerPage 1.0 TCPServerPage.qml
+TCPClientPage 1.0 TCPClientPage.qml
+UDPPage 1.0 UDPPage.qml

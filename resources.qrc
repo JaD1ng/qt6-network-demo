@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/main.qml</file>
+        <file>qml/TCPServerPage.qml</file>
+        <file>qml/TCPClientPage.qml</file>
+        <file>qml/UDPPage.qml</file>
+    </qresource>
+</RCC>
