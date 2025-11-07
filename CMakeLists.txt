@@ -28,7 +28,10 @@ add_subdirectory(udp)
 add_subdirectory(controllers)
 
 # 主可执行文件（QML 应用程序）
-qt_add_executable(tcp_udp_demo main.cpp)
+qt_add_executable(tcp_udp_demo
+        main.cpp
+        resources.qrc
+)
 
 # 使用 qt_add_qml_module 添加 QML 模块
 qt_add_qml_module(tcp_udp_demo
@@ -39,6 +42,9 @@ qt_add_qml_module(tcp_udp_demo
         qml/TCPServerPage.qml
         qml/TCPClientPage.qml
         qml/UDPPage.qml
+        RESOURCES
+        icon.png
+        icon.ico
 )
 
 target_link_libraries(tcp_udp_demo PRIVATE

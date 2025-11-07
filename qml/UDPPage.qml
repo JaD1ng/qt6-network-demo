@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.Material
 import QtQuick.Layouts
+import QtQuick.Effects
 import NetworkDemo 1.0
 
 Item {
@@ -8,25 +10,49 @@ Item {
         id: udpController
     }
 
+    // 主题颜色
+    QtObject {
+        id: theme
+        readonly property color primary: "#2196F3"
+        readonly property color accent: "#4CAF50"
+        readonly property color danger: "#F44336"
+        readonly property color warning: "#FF9800"
+        readonly property color surface: "#FFFFFF"
+    }
+
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 10
-        spacing: 10
+        spacing: 16
 
-        // 控制区域
-        GroupBox {
-            title: "UDP 控制"
+        // 控制卡片
+        Pane {
             Layout.fillWidth: true
+            Material.elevation: 2
+            padding: 20
+
+            background: Rectangle {
+                color: theme.surface
+                radius: 8
+            }
 
             ColumnLayout {
-                anchors.fill: parent
-                spacing: 10
+                width: parent.width
+                spacing: 16
+
+                // 标题
+                Label {
+                    text: "UDP 控制"
+                    font.pixelSize: 16
+                    font.bold: true
+                    color: theme.primary
+                }
 
                 RowLayout {
-                    spacing: 10
+                    spacing: 12
 
                     Label {
                         text: "本地端口:"
+                        font.pixelSize: 14
                     }
 
                     TextField {
@@ -34,14 +60,20 @@ Item {
                         text: "9999"
                         placeholderText: "本地端口"
                         validator: IntValidator {
-                            bottom: 1; top: 65535
+                            bottom: 1
+                            top: 65535
                         }
                         Layout.preferredWidth: 100
                         enabled: !udpController.isBound
+                        font.pixelSize: 14
+                        selectByMouse: true
                     }
 
                     Button {
                         text: udpController.isBound ? "解绑" : "绑定"
+                        highlighted: udpController.isBound
+                        Material.background: udpController.isBound ? theme.danger : theme.primary
+                        font.pixelSize: 14
                         onClicked: {
                             if (udpController.isBound) {
                                 udpController.unbind()
@@ -51,11 +83,34 @@ Item {
                         }
                     }
 
-                    Label {
-                        text: udpController.isBound ? "状态: 已绑定 (端口 " + udpController.localPort + ")" : "状态: 未绑定"
-                        color: udpController.isBound ? "green" : "gray"
-                        font.bold: true
-                        Layout.leftMargin: 20
+                    // 状态徽章
+                    Rectangle {
+                        Layout.preferredWidth: Math.max(statusLabel.implicitWidth + 32, 120)
+                        Layout.preferredHeight: 36
+                        radius: 18
+                        color: udpController.isBound ? "#E8F5E9" : "#FFF3E0"
+                        border.width: 1
+                        border.color: udpController.isBound ? theme.accent : theme.warning
+
+                        RowLayout {
+                            anchors.centerIn: parent
+                            spacing: 8
+
+                            Rectangle {
+                                width: 10
+                                height: 10
+                                radius: 5
+                                color: udpController.isBound ? theme.accent : theme.warning
+                            }
+
+                            Label {
+                                id: statusLabel
+                                text: udpController.isBound ? "已绑定: " + udpController.localPort : "未绑定"
+                                font.pixelSize: 14
+                                font.bold: true
+                                color: udpController.isBound ? theme.accent : theme.warning
+                            }
+                        }
                     }
 
                     Item {
@@ -64,26 +119,44 @@ Item {
 
                     Button {
                         text: "清空日志"
+                        flat: true
+                        Material.foreground: "#757575"
+                        font.pixelSize: 13
                         onClicked: udpController.clearLog()
                     }
                 }
             }
         }
 
-        // 消息发送区域
-        GroupBox {
-            title: "发送消息"
+        // 消息发送卡片
+        Pane {
             Layout.fillWidth: true
+            Material.elevation: 2
+            padding: 20
+
+            background: Rectangle {
+                color: theme.surface
+                radius: 8
+            }
 
             ColumnLayout {
-                anchors.fill: parent
-                spacing: 10
+                width: parent.width
+                spacing: 12
 
+                Label {
+                    text: "发送消息"
+                    font.pixelSize: 16
+                    font.bold: true
+                    color: theme.primary
+                }
+
+                // 目标设置
                 RowLayout {
-                    spacing: 10
+                    spacing: 12
 
                     Label {
                         text: "目标地址:"
+                        font.pixelSize: 14
                     }
 
                     TextField {
@@ -91,10 +164,13 @@ Item {
                         text: "127.0.0.1"
                         placeholderText: "目标IP地址"
                         Layout.preferredWidth: 150
+                        font.pixelSize: 14
+                        selectByMouse: true
                     }
 
                     Label {
                         text: "目标端口:"
+                        font.pixelSize: 14
                     }
 
                     TextField {
@@ -102,26 +178,39 @@ Item {
                         text: "9999"
                         placeholderText: "目标端口"
                         validator: IntValidator {
-                            bottom: 1; top: 65535
+                            bottom: 1
+                            top: 65535
                         }
                         Layout.preferredWidth: 100
+                        font.pixelSize: 14
+                        selectByMouse: true
                     }
                 }
 
+                // 消息输入和发送按钮
                 RowLayout {
-                    spacing: 10
+                    spacing: 12
 
                     TextField {
                         id: messageField
                         placeholderText: "输入要发送的消息..."
                         Layout.fillWidth: true
-                        onAccepted: sendUnicastButton.clicked()
+                        font.pixelSize: 14
+                        selectByMouse: true
+                        onAccepted: {
+                            if (sendUnicastButton.enabled) {
+                                sendUnicastButton.clicked()
+                            }
+                        }
                     }
 
                     Button {
                         id: sendUnicastButton
                         text: "发送单播"
+                        highlighted: true
                         enabled: messageField.text.length > 0
+                        Material.background: theme.accent
+                        font.pixelSize: 14
                         onClicked: {
                             udpController.sendMessage(messageField.text, targetHostField.text, parseInt(targetPortField.text))
                             messageField.clear()
@@ -131,7 +220,10 @@ Item {
                     Button {
                         id: sendBroadcastButton
                         text: "发送广播"
+                        highlighted: true
                         enabled: messageField.text.length > 0
+                        Material.background: theme.warning
+                        font.pixelSize: 14
                         onClicked: {
                             udpController.sendBroadcast(messageField.text, parseInt(targetPortField.text))
                             messageField.clear()
@@ -141,23 +233,66 @@ Item {
             }
         }
 
-        // 日志显示区域
-        GroupBox {
-            title: "通信日志"
+        // 日志卡片
+        Pane {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Material.elevation: 2
+            padding: 0
 
-            ScrollView {
+            background: Rectangle {
+                color: theme.surface
+                radius: 8
+            }
+
+            ColumnLayout {
                 anchors.fill: parent
-                clip: true
+                spacing: 0
 
-                TextArea {
-                    readOnly: true
-                    text: udpController.log
-                    wrapMode: TextEdit.Wrap
-                    font.family: "Consolas"
-                    font.pixelSize: 12
-                    selectByMouse: true
+                // 日志标题栏
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 48
+                    color: "#FAFAFA"
+                    radius: 8
+
+                    Rectangle {
+                        width: parent.width
+                        height: parent.radius
+                        anchors.bottom: parent.bottom
+                        color: parent.color
+                    }
+
+                    Label {
+                        anchors.left: parent.left
+                        anchors.leftMargin: 20
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "通信日志"
+                        font.pixelSize: 16
+                        font.bold: true
+                        color: theme.primary
+                    }
+                }
+
+                // 日志内容
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+
+                    TextArea {
+                        readOnly: true
+                        text: udpController.log
+                        wrapMode: TextEdit.Wrap
+                        font.family: "Consolas, Monaco, monospace"
+                        font.pixelSize: 13
+                        selectByMouse: true
+                        color: "#212121"
+                        padding: 16
+                        background: Rectangle {
+                            color: "#FAFAFA"
+                        }
+                    }
                 }
             }
         }

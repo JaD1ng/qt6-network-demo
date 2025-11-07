@@ -3,7 +3,8 @@
 
 TCPServerController::TCPServerController(QObject *parent)
   : QObject(parent)
-    , m_server(new TCPServer(this)) {
+    , m_server(new TCPServer(0, this)) {
+  // 使用默认线程数（基于CPU核心数）
   // 连接信号
   connect(m_server, &TCPServer::serverStarted, this, &TCPServerController::onServerStarted);
   connect(m_server, &TCPServer::serverStopped, this, &TCPServerController::onServerStopped);

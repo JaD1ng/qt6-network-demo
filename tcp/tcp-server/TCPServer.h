@@ -1,34 +1,45 @@
 #ifndef TCPSERVER_H
 #define TCPSERVER_H
 
-#include <QObject>
 #include <QTcpServer>
-#include <QTcpSocket>
-#include <QHash>
 #include <QString>
-#include <QByteArray>
-#include <QDataStream>
+
+class IOThreadPool;
 
 /**
- * @brief TCP 服务器类，基于 Qt 事件循环的单线程异步模型
+ * @brief TCP 服务器类，基于多 Reactor 模式
+ *
+ * 架构设计：
+ * - 主 Reactor（Main Reactor）：TCPServer 运行在主线程
+ *   - 负责监听端口和接受新连接
+ *   - 使用轮询策略将新连接分配给从 Reactor
+ * - 从 Reactor（Sub Reactor）：I/O 线程池
+ *   - 每个线程处理部分客户端的 I/O 操作
+ *   - 每个线程有独立的事件循环
+ *   - 在 I/O 线程中处理业务逻辑
  *
  * 功能特性：
- * - 支持多客户端并发连接
+ * - 支持高并发多客户端连接
  * - 自动处理 TCP 黏包和半包问题
  * - 消息格式：[4字节长度(大端)][UTF-8消息内容]
  * - 使用网络字节序（大端）保证跨平台兼容性
+ * - 线程池大小可配置，默认基于 CPU 核心数
  *
  * 线程安全：
- * - 此类使用单线程事件驱动模型，不是线程安全的。
- * - 所有客户端在同一线程中处理
- * - 禁止从多个线程同时调用此类的方法
- * - 如需跨线程通信，请使用 Qt 的信号槽机制（队列连接）
+ * - 此类是线程安全的
+ * - 使用信号槽机制实现跨线程通信
+ * - 所有信号都使用队列连接
  */
-class TCPServer : public QObject {
+class TCPServer : public QTcpServer {
   Q_OBJECT
 
 public:
-  explicit TCPServer(QObject *parent = nullptr);
+  /**
+   * @brief 构造函数
+   * @param threadCount I/O 线程池大小，0 表示使用 CPU 核心数
+   * @param parent 父对象
+   */
+  explicit TCPServer(int threadCount = 0, QObject *parent = nullptr);
 
   ~TCPServer() override;
 
@@ -38,10 +49,10 @@ public:
   // 停止服务器
   void stopServer();
 
-  // 发送消息给指定客户端（处理黏包和大小端）
+  // 发送消息给指定客户端（线程安全）
   void sendMessage(qintptr clientId, const QString &message);
 
-  // 广播消息给所有客户端（处理黏包和大小端）
+  // 广播消息给所有客户端（线程安全）
   void broadcastMessage(const QString &message);
 
   // 获取服务器状态
@@ -50,15 +61,13 @@ public:
   // 获取当前连接数
   int clientCount() const;
 
-private:
-  // 打包消息：[4字节长度(大端)][消息内容]
-  static QByteArray packMessage(const QString &message);
+  // 获取线程池大小
+  int threadPoolSize() const;
 
-  // 解析接收到的数据，处理黏包和半包
-  void parseReceivedData(QTcpSocket *socket);
-
-signals:
+  signals:
   // 服务器启动成功
+  
+
   void serverStarted(quint16 port);
 
   // 服务器停止
@@ -76,21 +85,12 @@ signals:
   // 错误信息
   void errorOccurred(const QString &error);
 
-private
-slots:
-  // 处理新连接
-  void onNewConnection();
-
-  // 处理客户端数据
-  void onClientReadyRead();
-
-  // 处理客户端断开
-  void onClientDisconnected();
+protected:
+  // 重写 QTcpServer 的虚函数，直接处理底层连接
+  void incomingConnection(qintptr socketDescriptor) override;
 
 private:
-  QTcpServer *m_server;
-  QHash<qintptr, QTcpSocket *> m_clients; // 客户端映射表
-  QHash<qintptr, QByteArray> m_receiveBuffers; // 每个客户端的接收缓冲区，处理半包
+  IOThreadPool *m_threadPool; // I/O 线程池（从 Reactor）
 };
 
 #endif // TCPSERVER_H

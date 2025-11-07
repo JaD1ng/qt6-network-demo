@@ -1,12 +1,16 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QIcon>
 #include "TCPServerController.h"
 #include "TCPClientController.h"
 #include "UDPController.h"
 
 int main(int argc, char *argv[]) {
   QGuiApplication app(argc, argv);
+
+  // 设置应用程序图标
+  app.setWindowIcon(QIcon(":/icon.png"));
 
   // 注册 QML 类型
   qmlRegisterType<TCPServerController>("NetworkDemo", 1, 0, "TCPServerController");

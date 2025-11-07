@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QString>
-#include "TCPClient.h"
+#include "TCPClientWorker.h"
 
 class TCPClientController : public QObject {
   Q_OBJECT
@@ -59,7 +59,7 @@ private:
   void appendLog(const QString &text);
 
 private:
-  TCPClient *m_client;
+  TCPClientWorker *m_client; // 使用 TCPClientWorker（独立线程）
   bool m_autoReconnect;
   QString m_log;
 };

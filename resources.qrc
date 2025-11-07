@@ -4,5 +4,7 @@
         <file>qml/TCPServerPage.qml</file>
         <file>qml/TCPClientPage.qml</file>
         <file>qml/UDPPage.qml</file>
+        <file>icon.png</file>
+        <file>icon.ico</file>
     </qresource>
 </RCC>

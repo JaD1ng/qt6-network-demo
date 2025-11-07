@@ -26,19 +26,17 @@ public:
   QString log() const;
 
   // QML可调用的方法
-    Q_INVOKABLE void bind(int port);
+  Q_INVOKABLE void bind(int port);
 
-    Q_INVOKABLE void unbind();
+  Q_INVOKABLE void unbind();
 
-    Q_INVOKABLE void sendMessage(const QString &message, const QString &targetHost, int targetPort);
+  Q_INVOKABLE void sendMessage(const QString &message, const QString &targetHost, int targetPort);
 
-    Q_INVOKABLE void sendBroadcast(const QString &message, int targetPort);
+  Q_INVOKABLE void sendBroadcast(const QString &message, int targetPort);
 
-    Q_INVOKABLE void clearLog();
+  Q_INVOKABLE void clearLog();
 
-  signals:
-  
-
+signals:
   void boundChanged();
 
   void localPortChanged();
@@ -46,9 +44,7 @@ public:
   void logChanged();
 
 private
-  slots:
-  
-
+slots:
   void onBound(quint16 port);
 
   void onUnbound();

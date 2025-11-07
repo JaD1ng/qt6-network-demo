@@ -26,21 +26,17 @@ public:
   QString log() const;
 
   // QML可调用的方法
-    Q_INVOKABLE void startServer(int port);
+  Q_INVOKABLE void startServer(int port);
 
-    Q_INVOKABLE void stopServer();
+  Q_INVOKABLE void stopServer();
 
-    Q_INVOKABLE void sendMessage(qintptr clientId, const QString &message);
+  Q_INVOKABLE void sendMessage(qintptr clientId, const QString &message);
 
-    Q_INVOKABLE void broadcastMessage(const QString &message);
+  Q_INVOKABLE void broadcastMessage(const QString &message);
 
-    Q_INVOKABLE void clearLog();
+  Q_INVOKABLE void clearLog();
 
-  signals:
-
-
-  
-
+signals:
   void listeningChanged();
 
   void clientCountChanged();
@@ -48,11 +44,7 @@ public:
   void logChanged();
 
 private
-  slots:
-
-
-  
-
+slots:
   void onServerStarted(quint16 port);
 
   void onServerStopped();

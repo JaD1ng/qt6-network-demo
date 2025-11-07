@@ -3,14 +3,14 @@
 
 TCPClientController::TCPClientController(QObject *parent)
   : QObject(parent)
-    , m_client(new TCPClient(this))
+    , m_client(new TCPClientWorker(this))  // 使用 TCPClientWorker（独立线程）
     , m_autoReconnect(false) {
-  // 连接信号
-  connect(m_client, &TCPClient::connected, this, &TCPClientController::onConnected);
-  connect(m_client, &TCPClient::disconnected, this, &TCPClientController::onDisconnected);
-  connect(m_client, &TCPClient::messageReceived, this, &TCPClientController::onMessageReceived);
-  connect(m_client, &TCPClient::errorOccurred, this, &TCPClientController::onErrorOccurred);
-  connect(m_client, &TCPClient::reconnecting, this, &TCPClientController::onReconnecting);
+  // 连接信号（队列连接已在 TCPClientWorker 内部处理）
+  connect(m_client, &TCPClientWorker::connected, this, &TCPClientController::onConnected);
+  connect(m_client, &TCPClientWorker::disconnected, this, &TCPClientController::onDisconnected);
+  connect(m_client, &TCPClientWorker::messageReceived, this, &TCPClientController::onMessageReceived);
+  connect(m_client, &TCPClientWorker::errorOccurred, this, &TCPClientController::onErrorOccurred);
+  connect(m_client, &TCPClientWorker::reconnecting, this, &TCPClientController::onReconnecting);
 }
 
 TCPClientController::~TCPClientController() = default;

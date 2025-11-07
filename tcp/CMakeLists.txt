@@ -1,12 +1,20 @@
-# UDP 模块的 CMakeLists.txt
+# TCP 模块的 CMakeLists.txt
 cmake_minimum_required(VERSION 3.16)
 
 # 收集所有 TCP 源文件和头文件
 set(TCP_SOURCES
         tcp-client/TCPClient.cpp
         tcp-client/TCPClient.h
+        tcp-client/TCPClientWorker.cpp
+        tcp-client/TCPClientWorker.h
         tcp-server/TCPServer.cpp
         tcp-server/TCPServer.h
+        tcp-server/ClientHandler.cpp
+        tcp-server/ClientHandler.h
+        tcp-server/IOThread.cpp
+        tcp-server/IOThread.h
+        tcp-server/IOThreadPool.cpp
+        tcp-server/IOThreadPool.h
 )
 
 # 创建 TCP 模块库
