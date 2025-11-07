@@ -3,9 +3,9 @@
 
 TCPClientController::TCPClientController(QObject *parent)
   : QObject(parent)
-    , m_client(new TCPClientWorker(this))  // 使用 TCPClientWorker（独立线程）
+    , m_client(new TCPClientWorker(this)) // 使用 TCPClientWorker（独立线程）
     , m_autoReconnect(false) {
-  // 连接信号（队列连接已在 TCPClientWorker 内部处理）
+  // 连接信号
   connect(m_client, &TCPClientWorker::connected, this, &TCPClientController::onConnected);
   connect(m_client, &TCPClientWorker::disconnected, this, &TCPClientController::onDisconnected);
   connect(m_client, &TCPClientWorker::messageReceived, this, &TCPClientController::onMessageReceived);
@@ -77,7 +77,13 @@ void TCPClientController::onReconnecting() {
 }
 
 void TCPClientController::appendLog(const QString &text) {
-  QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
-  m_log.append(QString("[%1] %2\n").arg(timestamp, text));
+  // 预留空间
+  if (m_log.capacity() - m_log.size() < 100) {
+    m_log.reserve(m_log.size() + 4096);
+  }
+
+  // 直接构建字符串，减少临时对象
+  m_log.append(QString("[%1] %2\n")
+    .arg(QDateTime::currentDateTime().toString("hh:mm:ss"), text));
   emit logChanged();
 }

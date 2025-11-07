@@ -5,7 +5,9 @@
 TCPClientWorker::TCPClientWorker(QObject *parent)
   : QObject(parent)
     , m_workerThread(new QThread(this))
-    , m_client(nullptr) {
+    , m_client(nullptr)
+    , m_isConnected(false) {
+  // 初始化连接状态缓存
   // 创建 TCPClient（在主线程）
   m_client = new TCPClient();
 
@@ -13,8 +15,16 @@ TCPClientWorker::TCPClientWorker(QObject *parent)
   m_client->moveToThread(m_workerThread);
 
   // 连接所有信号（使用队列连接，跨线程通信）
-  connect(m_client, &TCPClient::connected, this, &TCPClientWorker::connected, Qt::QueuedConnection);
-  connect(m_client, &TCPClient::disconnected, this, &TCPClientWorker::disconnected, Qt::QueuedConnection);
+  connect(m_client, &TCPClient::connected, this, [this]() {
+    m_isConnected = true;
+    emit connected();
+  }, Qt::QueuedConnection);
+
+  connect(m_client, &TCPClient::disconnected, this, [this]() {
+    m_isConnected = false;
+    emit disconnected();
+  }, Qt::QueuedConnection);
+
   connect(m_client, &TCPClient::messageReceived, this, &TCPClientWorker::messageReceived, Qt::QueuedConnection);
   connect(m_client, &TCPClient::errorOccurred, this, &TCPClientWorker::errorOccurred, Qt::QueuedConnection);
   connect(m_client, &TCPClient::reconnecting, this, &TCPClientWorker::reconnecting, Qt::QueuedConnection);
@@ -63,13 +73,8 @@ void TCPClientWorker::sendMessage(const QString &message) {
 }
 
 bool TCPClientWorker::isConnected() const {
-  // 注意：这是一个快照读取，可能有轻微延迟
-  // 对于精确状态，建议监听 connected/disconnected 信号
-  bool result = false;
-  QMetaObject::invokeMethod(m_client, [this, &result]() {
-    result = m_client->isConnected();
-  }, Qt::BlockingQueuedConnection);
-  return result;
+  // 返回缓存的连接状态，避免跨线程阻塞调用
+  return m_isConnected;
 }
 
 void TCPClientWorker::setAutoReconnect(bool enable) {

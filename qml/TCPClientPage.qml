@@ -147,8 +147,14 @@ Item {
                                 SequentialAnimation on opacity {
                                     running: clientController.isConnected
                                     loops: Animation.Infinite
-                                    NumberAnimation { from: 1.0; to: 0.3; duration: 800 }
-                                    NumberAnimation { from: 0.3; to: 1.0; duration: 800 }
+                                    NumberAnimation {
+                                        from: 1.0;
+                                        to: 0.3; duration: 800
+                                    }
+                                    NumberAnimation {
+                                        from: 0.3;
+                                        to: 1.0; duration: 800
+                                    }
                                 }
                             }
 

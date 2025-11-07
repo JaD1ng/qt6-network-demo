@@ -106,7 +106,7 @@ QByteArray TCPClient::packMessage(const QString &message) {
 
 void TCPClient::parseReceivedData() {
   // 读取所有可用数据到缓冲区
-  m_receiveBuffer.append(std::move(m_socket->readAll()));
+  m_receiveBuffer.append(m_socket->readAll());
 
   // 循环解析完整的消息
   while (m_receiveBuffer.size() >= static_cast<int>(sizeof(quint32))) {
@@ -132,11 +132,15 @@ void TCPClient::parseReceivedData() {
       // 数据不完整，等待更多数据（半包）
       qDebug() << "数据不完整，等待..."
           << "已接收:" << m_receiveBuffer.size() << "需要:" << totalSize;
+
+      // 预留足够空间，避免后续频繁分配
+      if (m_receiveBuffer.capacity() < totalSize) {
+        m_receiveBuffer.reserve(totalSize + 1024);
+      }
       break;
     }
 
     // 提取消息内容（跳过前4字节的长度字段）
-    // 直接从指针构造
     QString message = QString::fromUtf8(m_receiveBuffer.constData() + sizeof(quint32), messageLength);
 
     // 从缓冲区移除已处理的消息（处理黏包）
@@ -147,6 +151,14 @@ void TCPClient::parseReceivedData() {
       qDebug() << "收到完整消息:" << message;
       emit messageReceived(message);
     }
+  }
+
+  // 缓冲区缩容策略：如果缓冲区空闲空间过大（>8KB）且已用空间较小，则缩容
+  constexpr int SHRINK_THRESHOLD = 8192;
+  if (m_receiveBuffer.capacity() > SHRINK_THRESHOLD && m_receiveBuffer.size() < 1024) {
+    QByteArray temp(m_receiveBuffer);
+    m_receiveBuffer = std::move(temp);
+    m_receiveBuffer.reserve(4096); // 恢复初始容量
   }
 }
 
@@ -189,7 +201,6 @@ void TCPClient::onDisconnected() {
 }
 
 void TCPClient::onReadyRead() {
-  // 解析接收到的数据（自动处理黏包和半包）
   parseReceivedData();
 }
 
