@@ -1,7 +1,6 @@
 #include "IOThread.h"
 #include "ClientHandler.h"
 #include <QDebug>
-#include <QEventLoop>
 
 IOThread::IOThread(int threadId, QObject *parent)
   : QThread(parent)
@@ -10,6 +9,7 @@ IOThread::IOThread(int threadId, QObject *parent)
   // 连接内部信号到槽（队列连接，确保在本线程中执行）
   connect(this, &IOThread::doAddClient, this, &IOThread::handleAddClient, Qt::QueuedConnection);
   connect(this, &IOThread::doSendMessage, this, &IOThread::handleSendMessage, Qt::QueuedConnection);
+  connect(this, &IOThread::doBroadcastMessage, this, &IOThread::handleBroadcastMessage, Qt::QueuedConnection);
   connect(this, &IOThread::doDisconnect, this, &IOThread::handleDisconnect, Qt::QueuedConnection);
 }
 
@@ -29,6 +29,11 @@ void IOThread::addClient(qintptr socketDescriptor) {
 void IOThread::sendMessageToClient(qintptr clientId, const QString &message) {
   // 通过信号发送到本线程（线程安全）
   emit doSendMessage(clientId, message);
+}
+
+void IOThread::broadcastMessage(const QString &message) {
+  // 通过信号发送到本线程（线程安全）
+  emit doBroadcastMessage(message);
 }
 
 void IOThread::disconnectClient(qintptr clientId) {
@@ -57,7 +62,7 @@ void IOThread::handleAddClient(qintptr socketDescriptor) {
   ClientHandler *handler = new ClientHandler(socketDescriptor);
 
   // 连接信号（直接连接，因为在同一线程）
-  connect(handler, &ClientHandler::ready, this, &IOThread::handleClientReady, Qt::DirectConnection);
+  connect(handler, &ClientHandler::ready, this, &IOThread::clientReady, Qt::DirectConnection);
   connect(handler, &ClientHandler::messageReceived, this, &IOThread::messageReceived, Qt::DirectConnection);
   connect(handler, &ClientHandler::disconnected, this, &IOThread::handleClientDisconnected, Qt::DirectConnection);
   connect(handler, &ClientHandler::errorOccurred, this, &IOThread::errorOccurred, Qt::DirectConnection);
@@ -71,11 +76,6 @@ void IOThread::handleAddClient(qintptr socketDescriptor) {
 
   qDebug() << "[IOThread" << m_threadId << "] 添加客户端" << socketDescriptor
       << "，当前客户端数:" << m_clientCount.load(std::memory_order_acquire);
-}
-
-void IOThread::handleClientReady(qintptr clientId, const QString &address) {
-  // 转发信号到外部
-  emit clientReady(clientId, address);
 }
 
 void IOThread::handleClientDisconnected(qintptr clientId) {
@@ -108,4 +108,12 @@ void IOThread::handleDisconnect(qintptr clientId) {
   if (it != m_clientHandlers.end()) {
     it.value()->disconnect();
   }
+}
+
+void IOThread::handleBroadcastMessage(const QString &message) {
+  // 遍历本线程管理的所有客户端，发送消息
+  for (auto it = m_clientHandlers.begin(); it != m_clientHandlers.end(); ++it) {
+    it.value()->sendMessage(message);
+  }
+  qDebug() << "[IOThread" << m_threadId << "] 广播消息给" << m_clientHandlers.size() << "个客户端";
 }

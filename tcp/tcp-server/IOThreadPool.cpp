@@ -66,7 +66,7 @@ void IOThreadPool::stop() {
 
   m_threads.clear();
   m_clientThreadMap.clear();
-  m_nextThreadIndex.store(0, std::memory_order_release);
+  m_nextThreadIndex.store(0, std::memory_order_relaxed); // 简单计数器使用 relaxed 即可
 
   qDebug() << "[IOThreadPool] 已停止";
 }
@@ -100,17 +100,11 @@ void IOThreadPool::sendMessage(qintptr clientId, const QString &message) {
 }
 
 void IOThreadPool::broadcastMessage(const QString &message) {
-  // 向所有线程广播消息
+  // 直接调用每个线程的 broadcastMessage
   for (IOThread *thread: m_threads) {
-    // 获取该线程的所有客户端并发送消息
-    // 注意：这里简化实现，实际需要遍历所有客户端
-    // 可以通过在 IOThread 中添加 broadcastMessage 方法优化
-    for (auto it = m_clientThreadMap.begin(); it != m_clientThreadMap.end(); ++it) {
-      if (it.value() == thread) {
-        thread->sendMessageToClient(it.key(), message);
-      }
-    }
+    thread->broadcastMessage(message);
   }
+  qDebug() << "[IOThreadPool] 广播消息给所有线程";
 }
 
 void IOThreadPool::disconnectClient(qintptr clientId) {

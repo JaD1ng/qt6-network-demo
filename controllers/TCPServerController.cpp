@@ -79,6 +79,12 @@ void TCPServerController::onErrorOccurred(const QString &error) {
 }
 
 void TCPServerController::appendLog(const QString &text) {
+  // 预留空间，避免频繁内存重分配
+  if (m_log.capacity() - m_log.size() < 100) {
+    m_log.reserve(m_log.size() + 4096);
+  }
+
+  // 直接构建字符串，减少临时对象
   QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
   m_log.append(QString("[%1] %2\n").arg(timestamp, text));
   emit logChanged();

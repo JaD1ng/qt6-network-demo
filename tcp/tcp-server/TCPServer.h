@@ -55,19 +55,14 @@ public:
   // 广播消息给所有客户端（线程安全）
   void broadcastMessage(const QString &message);
 
-  // 获取服务器状态
-  bool isListening() const;
-
   // 获取当前连接数
   int clientCount() const;
 
   // 获取线程池大小
   int threadPoolSize() const;
 
-  signals:
+signals:
   // 服务器启动成功
-  
-
   void serverStarted(quint16 port);
 
   // 服务器停止

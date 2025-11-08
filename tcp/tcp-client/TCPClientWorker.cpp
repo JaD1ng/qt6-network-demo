@@ -7,7 +7,6 @@ TCPClientWorker::TCPClientWorker(QObject *parent)
     , m_workerThread(new QThread(this))
     , m_client(nullptr)
     , m_isConnected(false) {
-  // 初始化连接状态缓存
   // 创建 TCPClient（在主线程）
   m_client = new TCPClient();
 
@@ -15,6 +14,7 @@ TCPClientWorker::TCPClientWorker(QObject *parent)
   m_client->moveToThread(m_workerThread);
 
   // 连接所有信号（使用队列连接，跨线程通信）
+  // connected 和 disconnected 信号同时更新状态缓存，避免重复监听
   connect(m_client, &TCPClient::connected, this, [this]() {
     m_isConnected = true;
     emit connected();

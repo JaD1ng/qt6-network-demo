@@ -27,13 +27,18 @@ add_subdirectory(tcp)
 add_subdirectory(udp)
 add_subdirectory(controllers)
 
-# 主可执行文件（QML 应用程序）
+# 主可执行文件
 qt_add_executable(tcp_udp_demo
         main.cpp
         resources.qrc
 )
 
-# 使用 qt_add_qml_module 添加 QML 模块
+# 设置可执行文件输出目录
+set_target_properties(tcp_udp_demo PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+
+# 添加 QML 模块
 qt_add_qml_module(tcp_udp_demo
         URI NetworkDemo
         VERSION 1.0
@@ -67,11 +72,9 @@ target_compile_definitions(tcp_udp_demo PRIVATE
         QT_QML_IMPORT_PATH="${QT_QML_DIR}"
 )
 
+# Windows 平台部署：复制运行时依赖
 if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-    set(DEBUG_SUFFIX)
-    if (MSVC AND CMAKE_BUILD_TYPE MATCHES "Debug")
-        set(DEBUG_SUFFIX "d")
-    endif ()
+    # 查找 Qt 安装路径
     set(QT_INSTALL_PATH "${CMAKE_PREFIX_PATH}")
     if (NOT EXISTS "${QT_INSTALL_PATH}/bin")
         set(QT_INSTALL_PATH "${QT_INSTALL_PATH}/..")
@@ -79,19 +82,30 @@ if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
             set(QT_INSTALL_PATH "${QT_INSTALL_PATH}/..")
         endif ()
     endif ()
-    if (EXISTS "${QT_INSTALL_PATH}/plugins/platforms/qwindows${DEBUG_SUFFIX}.dll")
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E make_directory
-                "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/platforms/")
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy
-                "${QT_INSTALL_PATH}/plugins/platforms/qwindows${DEBUG_SUFFIX}.dll"
-                "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/platforms/")
-    endif ()
-    foreach (QT_LIB Core Gui Qml Quick QuickControls2 Network)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy
-                "${QT_INSTALL_PATH}/bin/Qt6${QT_LIB}${DEBUG_SUFFIX}.dll"
-                "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
-    endforeach (QT_LIB)
+
+    # 复制 LLVM-MinGW 运行时库（编译器依赖，windeployqt 不会复制）
+    foreach (RUNTIME_LIB libc++ libunwind)
+        if (EXISTS "${QT_INSTALL_PATH}/bin/${RUNTIME_LIB}.dll")
+            add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy
+                    "${QT_INSTALL_PATH}/bin/${RUNTIME_LIB}.dll"
+                    "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
+        endif ()
+    endforeach (RUNTIME_LIB)
+
+#    # 使用 windeployqt6 自动部署
+#    find_program(WINDEPLOYQT_EXECUTABLE
+#            NAMES windeployqt6 windeployqt
+#            HINTS "${QT_INSTALL_PATH}/bin")
+#    if (WINDEPLOYQT_EXECUTABLE)
+#        # windeployqt 会自动检测 Debug/Release 模式
+#        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#                COMMAND "${WINDEPLOYQT_EXECUTABLE}"
+#                --qmldir "${CMAKE_SOURCE_DIR}/qml"
+#                --no-translations
+#                "$<TARGET_FILE:${PROJECT_NAME}>"
+#                COMMENT "Running windeployqt to deploy Qt dependencies...")
+#    else ()
+#        message(WARNING "windeployqt not found. Application may not run standalone.")
+#    endif ()
 endif ()

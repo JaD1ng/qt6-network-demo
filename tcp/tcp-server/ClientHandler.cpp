@@ -2,6 +2,7 @@
 #include "IOThread.h"
 #include <QDebug>
 #include <QHostAddress>
+#include <QDataStream>
 
 ClientHandler::ClientHandler(qintptr socketDescriptor, QObject *parent)
   : QObject(parent)
@@ -53,10 +54,7 @@ void ClientHandler::initialize() {
   }
 
   // 构建完整地址字符串
-  m_clientAddress.reserve(clientAddressStr.size() + 6);
-  m_clientAddress.append(clientAddressStr)
-      .append(':')
-      .append(QString::number(m_socket->peerPort()));
+  m_clientAddress = QString("%1:%2").arg(clientAddressStr).arg(m_socket->peerPort());
 
   qDebug() << "[ClientHandler]" << m_socketDescriptor << "初始化完成，地址:" << m_clientAddress
       << "线程:" << QThread::currentThread();
@@ -85,10 +83,7 @@ void ClientHandler::sendMessage(const QString &message) {
 }
 
 void ClientHandler::disconnect() {
-  if (m_socket && m_socket
-      ->
-      state() != QAbstractSocket::UnconnectedState
-  ) {
+  if (m_socket && m_socket->state() != QAbstractSocket::UnconnectedState) {
     m_socket->disconnectFromHost();
   }
 }
@@ -113,7 +108,7 @@ QByteArray ClientHandler::packMessage(const QString &message) {
 
 void ClientHandler::parseReceivedData() {
   // 读取所有可用数据到缓冲区
-  m_receiveBuffer.append(std::move(m_socket->readAll()));
+  m_receiveBuffer.append(m_socket->readAll());
 
   // 循环解析完整的消息
   while (m_receiveBuffer.size() >= static_cast<int>(sizeof(quint32))) {
@@ -139,6 +134,11 @@ void ClientHandler::parseReceivedData() {
       // 数据不完整，等待更多数据
       qDebug() << "[ClientHandler]" << m_socketDescriptor << "数据不完整，等待..."
           << "已接收:" << m_receiveBuffer.size() << "需要:" << totalSize;
+
+      // 预留足够空间，避免后续频繁分配
+      if (m_receiveBuffer.capacity() < totalSize) {
+        m_receiveBuffer.reserve(totalSize + 1024);
+      }
       break;
     }
 
@@ -153,6 +153,14 @@ void ClientHandler::parseReceivedData() {
       qDebug() << "[ClientHandler]" << m_socketDescriptor << "收到完整消息:" << message;
       emit messageReceived(m_socketDescriptor, message);
     }
+  }
+
+  // 缓冲区缩容策略：如果缓冲区空闲空间过大（>8KB）且已用空间较小，则缩容
+  constexpr int SHRINK_THRESHOLD = 8192;
+  if (m_receiveBuffer.capacity() > SHRINK_THRESHOLD && m_receiveBuffer.size() < 1024) {
+    QByteArray temp(m_receiveBuffer);
+    m_receiveBuffer = std::move(temp);
+    m_receiveBuffer.reserve(4096); // 恢复初始容量
   }
 }
 
@@ -170,7 +178,12 @@ void ClientHandler::onDisconnected() {
 }
 
 void ClientHandler::onError(QAbstractSocket::SocketError socketError) {
-  Q_UNUSED(socketError)
+  // 过滤远程主机关闭连接，这不是错误
+  if (socketError == QAbstractSocket::RemoteHostClosedError) {
+    qDebug() << "[ClientHandler]" << m_socketDescriptor << "远程主机关闭连接";
+    return;
+  }
+
   QString errorString = m_socket->errorString();
   qWarning() << "[ClientHandler]" << m_socketDescriptor << "错误:" << errorString;
   emit errorOccurred(m_socketDescriptor, errorString);

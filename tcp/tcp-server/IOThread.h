@@ -40,6 +40,9 @@ public:
   // 发送消息给指定客户端（线程安全）
   void sendMessageToClient(qintptr clientId, const QString &message);
 
+  // 广播消息给此线程管理的所有客户端（线程安全）
+  void broadcastMessage(const QString &message);
+
   // 断开指定客户端（线程安全）
   void disconnectClient(qintptr clientId);
 
@@ -65,22 +68,24 @@ signals:
   // 内部信号：断开连接（队列连接）
   void doDisconnect(qintptr clientId);
 
+  // 内部信号：广播消息（队列连接）
+  void doBroadcastMessage(QString message);
+
 protected:
   void run() override;
 
-private
-slots:
+private slots:
   // 处理客户端添加（在本线程中执行）
   void handleAddClient(qintptr socketDescriptor);
-
-  // 处理客户端就绪
-  void handleClientReady(qintptr clientId, const QString &address);
 
   // 处理客户端断开（在本线程中执行）
   void handleClientDisconnected(qintptr clientId);
 
   // 处理发送消息（在本线程中执行）
   void handleSendMessage(qintptr clientId, const QString &message);
+
+  // 处理广播消息（在本线程中执行）
+  void handleBroadcastMessage(const QString &message);
 
   // 处理断开连接（在本线程中执行）
   void handleDisconnect(qintptr clientId);

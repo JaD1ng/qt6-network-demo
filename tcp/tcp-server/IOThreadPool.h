@@ -76,6 +76,7 @@ private:
   // 根据轮询策略选择下一个线程
   IOThread *selectNextThread();
 
+private slots:
   // 处理客户端断开，更新映射表
   void handleClientDisconnected(qintptr clientId);
 

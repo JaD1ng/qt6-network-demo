@@ -37,7 +37,7 @@ bool TCPServer::startServer(quint16 port) {
   }
 
   qDebug() << "[TCPServer] 启动成功，监听端口:" << port
-           << "，线程池大小:" << m_threadPool->threadCount();
+      << "，线程池大小:" << m_threadPool->threadCount();
   emit serverStarted(port);
   return true;
 }
@@ -66,10 +66,6 @@ void TCPServer::sendMessage(qintptr clientId, const QString &message) {
 void TCPServer::broadcastMessage(const QString &message) {
   m_threadPool->broadcastMessage(message);
   qDebug() << "[TCPServer] 广播消息给所有客户端:" << message;
-}
-
-bool TCPServer::isListening() const {
-  return QTcpServer::isListening();
 }
 
 int TCPServer::clientCount() const {
