@@ -59,8 +59,7 @@ signals:
   // 错误信息
   void errorOccurred(const QString &error);
 
-private
-slots:
+private slots:
   // 处理接收到的数据报
   void onReadyRead();
 

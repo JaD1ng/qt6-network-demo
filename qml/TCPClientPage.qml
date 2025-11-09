@@ -270,11 +270,13 @@ Item {
 
                 // 日志内容
                 ScrollView {
+                    id: logScrollView
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
 
                     TextArea {
+                        id: logTextArea
                         readOnly: true
                         text: clientController.log
                         wrapMode: TextEdit.Wrap
@@ -285,6 +287,15 @@ Item {
                         padding: 16
                         background: Rectangle {
                             color: "#FAFAFA"
+                        }
+
+                        onTextChanged: {
+                            // 延迟执行滚动操作，确保文本已渲染
+                            Qt.callLater(function() {
+                                if (logScrollView.ScrollBar.vertical) {
+                                    logScrollView.ScrollBar.vertical.position = 1.0 - logScrollView.ScrollBar.vertical.size
+                                }
+                            })
                         }
                     }
                 }
