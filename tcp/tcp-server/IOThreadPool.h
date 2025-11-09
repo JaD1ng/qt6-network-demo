@@ -2,18 +2,24 @@
 #define IOTHREADPOOL_H
 
 #include <QObject>
+#include <QThread>
 #include <QList>
 #include <QHash>
 #include <atomic>
 #include <thread>
 
-class IOThread;
+class IOThreadWorker;
 
 /**
  * @brief I/O 线程池管理类
  *
+ * 设计模式：
+ * 使用 QThread + Worker 模式
+ * QThread 只负责提供事件循环
+ * IOThreadWorker 负责业务逻辑
+ *
  * 功能特性：
- * - 管理多个 I/O 工作线程
+ * - 管理多个 I/O 工作线程和 Worker
  * - 使用轮询（Round Robin）策略分配客户端连接
  * - 线程池大小可配置，默认基于 CPU 核心数
  * - 线程安全的客户端管理
@@ -54,7 +60,7 @@ public:
   void disconnectClient(qintptr clientId);
 
   // 获取线程池大小
-  int threadCount() const { return m_threads.size(); }
+  int threadCount() const { return m_workers.size(); }
 
   // 获取总客户端数量
   int totalClientCount() const;
@@ -73,17 +79,23 @@ signals:
   void errorOccurred(qintptr clientId, const QString &error);
 
 private:
-  // 根据轮询策略选择下一个线程
-  IOThread *selectNextThread();
+  // 线程和 Worker 的组合
+  struct ThreadContext {
+    QThread *thread;
+    IOThreadWorker *worker;
+  };
+
+  // 根据轮询策略选择下一个 Worker
+  IOThreadWorker *selectNextWorker();
 
 private slots:
   // 处理客户端断开，更新映射表
   void handleClientDisconnected(qintptr clientId);
 
 private:
-  QList<IOThread *> m_threads; // I/O 线程列表
-  QHash<qintptr, IOThread *> m_clientThreadMap; // 客户端到线程的映射
-  std::atomic<int> m_nextThreadIndex; // 下一个线程索引（轮询）
+  QList<ThreadContext> m_workers; // Worker 列表（包含线程和 Worker）
+  QHash<qintptr, IOThreadWorker *> m_clientWorkerMap; // 客户端到 Worker 的映射
+  std::atomic<int> m_nextWorkerIndex; // 下一个 Worker 索引（轮询）
   int m_threadCount; // 线程数量
 };
 

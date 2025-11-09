@@ -11,8 +11,8 @@ set(TCP_SOURCES
         tcp-server/TCPServer.h
         tcp-server/ClientHandler.cpp
         tcp-server/ClientHandler.h
-        tcp-server/IOThread.cpp
-        tcp-server/IOThread.h
+        tcp-server/IOThreadWorker.cpp
+        tcp-server/IOThreadWorker.h
         tcp-server/IOThreadPool.cpp
         tcp-server/IOThreadPool.h
 )

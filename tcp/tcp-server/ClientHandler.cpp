@@ -1,6 +1,6 @@
 #include "ClientHandler.h"
-#include "IOThread.h"
 #include <QDebug>
+#include <QThread>
 #include <QHostAddress>
 #include <QDataStream>
 
