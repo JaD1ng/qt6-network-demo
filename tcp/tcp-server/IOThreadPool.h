@@ -1,10 +1,12 @@
 #ifndef IOTHREADPOOL_H
 #define IOTHREADPOOL_H
 
+#include "IOThreadWorker.h"
+
+#include <QHash>
+#include <QList>
 #include <QObject>
 #include <QThread>
-#include <QList>
-#include <QHash>
 #include <atomic>
 #include <thread>
 
@@ -83,6 +85,8 @@ private:
   struct ThreadContext {
     QThread *thread;
     IOThreadWorker *worker;
+
+    ThreadContext(QThread *t, IOThreadWorker *tw) : thread(t), worker(tw) {}
   };
 
   // 根据轮询策略选择下一个 Worker
@@ -96,7 +100,7 @@ private:
   QList<ThreadContext> m_workers; // Worker 列表（包含线程和 Worker）
   QHash<qintptr, IOThreadWorker *> m_clientWorkerMap; // 客户端到 Worker 的映射
   std::atomic<int> m_nextWorkerIndex; // 下一个 Worker 索引（轮询）
-  int m_threadCount; // 线程数量
+  int m_threadCount;                  // 线程数量
 };
 
 #endif // IOTHREADPOOL_H

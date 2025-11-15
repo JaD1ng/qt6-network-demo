@@ -6,7 +6,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(CMAKE_PREFIX_PATH "D:/tools/Qt/6.9.3/llvm-mingw_64")
+set(CMAKE_PREFIX_PATH "D:/tools/Qt/6.9.3/msvc2022_64")
 
 # 查找 Qt6 组件：Core, Gui, Qml, Quick, Network, QuickControls2
 find_package(Qt6 COMPONENTS

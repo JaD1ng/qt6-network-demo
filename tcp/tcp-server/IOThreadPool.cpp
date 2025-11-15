@@ -54,7 +54,7 @@ void IOThreadPool::start() {
     thread->start();
 
     // 保存到列表
-    m_workers.append({thread, worker});
+    m_workers.emplaceBack(thread,worker);
 
     qDebug() << "[IOThreadPool] 线程" << i << "已启动";
   }
@@ -70,13 +70,13 @@ void IOThreadPool::stop() {
   qDebug() << "[IOThreadPool] 停止中...";
 
   // 先清理所有 Worker 的客户端
-  for (const ThreadContext &ctx: m_workers) {
-    QMetaObject::invokeMethod(ctx.worker, &IOThreadWorker::cleanup, Qt::QueuedConnection);
+  for (const auto &[_, worker]: m_workers) {
+    QMetaObject::invokeMethod(worker, &IOThreadWorker::cleanup, Qt::QueuedConnection);
   }
 
   // 停止所有线程
-  for (const ThreadContext &ctx: m_workers) {
-    ctx.thread->quit();
+  for (const auto &[thread, _]: m_workers) {
+    thread->quit();
   }
 
   // 等待所有线程结束

@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
   QGuiApplication app(argc, argv);
 
   // 设置应用程序图标
-  app.setWindowIcon(QIcon(":/icon.png"));
+  QGuiApplication::setWindowIcon(QIcon(":/icon.png"));
 
   // 注册 QML 类型
   qmlRegisterType<TCPServerController>("NetworkDemo", 1, 0, "TCPServerController");
@@ -36,5 +36,5 @@ int main(int argc, char *argv[]) {
 
   engine.load(url);
 
-  return app.exec();
+  return QGuiApplication::exec();
 }
