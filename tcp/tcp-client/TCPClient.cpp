@@ -2,29 +2,26 @@
 #include <QDebug>
 
 TCPClient::TCPClient(QObject *parent)
-  : QObject(parent)
-    , m_socket(new QTcpSocket(this))
-    , m_reconnectTimer(new QTimer(this))
-    , m_port(0)
-    , m_autoReconnect(false)
-    , m_reconnectInterval(3000) // 默认3秒重连
-    , m_isManualDisconnect(false) {
+    : QObject(parent), m_socket(new QTcpSocket(this)),
+      m_reconnectTimer(new QTimer(this)),
+      m_reconnectInterval(3000), // 默认3秒重连
+      m_port(0), m_autoReconnect(false), m_isManualDisconnect(false) {
   m_receiveBuffer.reserve(4096);
 
   // 连接信号
   connect(m_socket, &QTcpSocket::connected, this, &TCPClient::onConnected);
-  connect(m_socket, &QTcpSocket::disconnected, this, &TCPClient::onDisconnected);
+  connect(m_socket, &QTcpSocket::disconnected, this,
+          &TCPClient::onDisconnected);
   connect(m_socket, &QTcpSocket::readyRead, this, &TCPClient::onReadyRead);
   connect(m_socket, &QTcpSocket::errorOccurred, this, &TCPClient::onError);
 
   // 配置重连定时器
   m_reconnectTimer->setSingleShot(true);
-  connect(m_reconnectTimer, &QTimer::timeout, this, &TCPClient::attemptReconnect);
+  connect(m_reconnectTimer, &QTimer::timeout, this,
+          &TCPClient::attemptReconnect);
 }
 
-TCPClient::~TCPClient() {
-  disconnectFromServer();
-}
+TCPClient::~TCPClient() { disconnectFromServer(); }
 
 void TCPClient::connectToServer(const QString &host, quint16 port) {
   if (m_socket->state() == QAbstractSocket::ConnectedState) {
@@ -82,9 +79,7 @@ void TCPClient::setAutoReconnect(bool enable) {
   }
 }
 
-void TCPClient::setReconnectInterval(int msec) {
-  m_reconnectInterval = msec;
-}
+void TCPClient::setReconnectInterval(int msec) { m_reconnectInterval = msec; }
 
 QByteArray TCPClient::packMessage(const QString &message) {
   // 消息格式：[4字节长度(网络字节序/大端)][消息内容UTF-8]
@@ -131,7 +126,7 @@ void TCPClient::parseReceivedData() {
     if (m_receiveBuffer.size() < totalSize) {
       // 数据不完整，等待更多数据（半包）
       qDebug() << "数据不完整，等待..."
-          << "已接收:" << m_receiveBuffer.size() << "需要:" << totalSize;
+               << "已接收:" << m_receiveBuffer.size() << "需要:" << totalSize;
 
       // 预留足够空间，避免后续频繁分配
       if (m_receiveBuffer.capacity() < totalSize) {
@@ -141,7 +136,8 @@ void TCPClient::parseReceivedData() {
     }
 
     // 提取消息内容（跳过前4字节的长度字段）
-    QString message = QString::fromUtf8(m_receiveBuffer.constData() + sizeof(quint32), messageLength);
+    QString message = QString::fromUtf8(
+        m_receiveBuffer.constData() + sizeof(quint32), messageLength);
 
     // 从缓冲区移除已处理的消息（处理黏包）
     m_receiveBuffer.remove(0, totalSize);
@@ -155,7 +151,8 @@ void TCPClient::parseReceivedData() {
 
   // 缓冲区缩容策略：如果缓冲区空闲空间过大（>8KB）且已用空间较小，则缩容
   constexpr int SHRINK_THRESHOLD = 8192;
-  if (m_receiveBuffer.capacity() > SHRINK_THRESHOLD && m_receiveBuffer.size() < 1024) {
+  if (m_receiveBuffer.capacity() > SHRINK_THRESHOLD &&
+      m_receiveBuffer.size() < 1024) {
     QByteArray temp(m_receiveBuffer);
     m_receiveBuffer = std::move(temp);
     m_receiveBuffer.reserve(4096); // 恢复初始容量
@@ -183,7 +180,8 @@ void TCPClient::onConnected() {
     serverAddressStr = peerAddr.toString();
   }
 
-  qDebug() << "已连接到服务器:" << serverAddressStr << ":" << m_socket->peerPort();
+  qDebug() << "已连接到服务器:" << serverAddressStr << ":"
+           << m_socket->peerPort();
   emit connected();
 }
 
@@ -200,9 +198,7 @@ void TCPClient::onDisconnected() {
   }
 }
 
-void TCPClient::onReadyRead() {
-  parseReceivedData();
-}
+void TCPClient::onReadyRead() { parseReceivedData(); }
 
 void TCPClient::onError(QAbstractSocket::SocketError socketError) {
   Q_UNUSED(socketError)

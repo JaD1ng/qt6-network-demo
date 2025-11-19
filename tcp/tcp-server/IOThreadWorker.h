@@ -1,8 +1,8 @@
 #ifndef IOTHREADWORKER_H
 #define IOTHREADWORKER_H
 
-#include <QObject>
 #include <QHash>
+#include <QObject>
 #include <atomic>
 
 class ClientHandler;
@@ -35,7 +35,9 @@ public:
   int threadId() const { return m_threadId; }
 
   // 获取当前管理的客户端数量（线程安全）
-  int clientCount() const { return m_clientCount.load(std::memory_order_acquire); }
+  int clientCount() const {
+    return m_clientCount.load(std::memory_order_acquire);
+  }
 
 public slots:
   // 添加客户端（在工作线程中执行）
@@ -71,9 +73,9 @@ private slots:
   void handleClientDisconnected(qintptr clientId);
 
 private:
-  int m_threadId; // 线程 ID
   QHash<qintptr, ClientHandler *> m_clientHandlers; // 客户端处理器映射
-  std::atomic<int> m_clientCount; // 客户端数量（原子变量）
+  int m_threadId;                                   // 线程 ID
+  std::atomic<int> m_clientCount;                   // 客户端数量（原子变量）
 };
 
 #endif // IOTHREADWORKER_H

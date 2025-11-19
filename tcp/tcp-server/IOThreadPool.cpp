@@ -4,9 +4,7 @@
 #include <algorithm>
 
 IOThreadPool::IOThreadPool(int threadCount, QObject *parent)
-  : QObject(parent)
-    , m_nextWorkerIndex(0)
-    , m_threadCount(threadCount) {
+    : QObject(parent), m_nextWorkerIndex(0), m_threadCount(threadCount) {
   // 如果未指定线程数，使用 CPU 核心数
   if (m_threadCount <= 0) {
     m_threadCount = static_cast<int>(std::thread::hardware_concurrency());
@@ -18,9 +16,7 @@ IOThreadPool::IOThreadPool(int threadCount, QObject *parent)
   qDebug() << "[IOThreadPool] 线程池大小:" << m_threadCount;
 }
 
-IOThreadPool::~IOThreadPool() {
-  stop();
-}
+IOThreadPool::~IOThreadPool() { stop(); }
 
 void IOThreadPool::start() {
   if (!m_workers.isEmpty()) {
@@ -41,11 +37,14 @@ void IOThreadPool::start() {
     worker->moveToThread(thread);
 
     // 连接信号（使用队列连接，跨线程通信）
-    connect(worker, &IOThreadWorker::clientReady, this, &IOThreadPool::clientReady, Qt::QueuedConnection);
-    connect(worker, &IOThreadWorker::messageReceived, this, &IOThreadPool::messageReceived, Qt::QueuedConnection);
-    connect(worker, &IOThreadWorker::clientDisconnected, this, &IOThreadPool::handleClientDisconnected,
-            Qt::QueuedConnection);
-    connect(worker, &IOThreadWorker::errorOccurred, this, &IOThreadPool::errorOccurred, Qt::QueuedConnection);
+    connect(worker, &IOThreadWorker::clientReady, this,
+            &IOThreadPool::clientReady, Qt::QueuedConnection);
+    connect(worker, &IOThreadWorker::messageReceived, this,
+            &IOThreadPool::messageReceived, Qt::QueuedConnection);
+    connect(worker, &IOThreadWorker::clientDisconnected, this,
+            &IOThreadPool::handleClientDisconnected, Qt::QueuedConnection);
+    connect(worker, &IOThreadWorker::errorOccurred, this,
+            &IOThreadPool::errorOccurred, Qt::QueuedConnection);
 
     // 线程结束时清理 Worker
     connect(thread, &QThread::finished, worker, &QObject::deleteLater);
@@ -54,7 +53,7 @@ void IOThreadPool::start() {
     thread->start();
 
     // 保存到列表
-    m_workers.emplaceBack(thread,worker);
+    m_workers.emplaceBack(thread, worker);
 
     qDebug() << "[IOThreadPool] 线程" << i << "已启动";
   }
@@ -70,17 +69,18 @@ void IOThreadPool::stop() {
   qDebug() << "[IOThreadPool] 停止中...";
 
   // 先清理所有 Worker 的客户端
-  for (const auto &[_, worker]: m_workers) {
-    QMetaObject::invokeMethod(worker, &IOThreadWorker::cleanup, Qt::QueuedConnection);
+  for (const auto &[_, worker] : m_workers) {
+    QMetaObject::invokeMethod(worker, &IOThreadWorker::cleanup,
+                              Qt::QueuedConnection);
   }
 
   // 停止所有线程
-  for (const auto &[thread, _]: m_workers) {
+  for (const auto &[thread, _] : m_workers) {
     thread->quit();
   }
 
   // 等待所有线程结束
-  for (const ThreadContext &ctx: m_workers) {
+  for (const ThreadContext &ctx : m_workers) {
     ctx.thread->wait();
     delete ctx.thread; // Worker 会通过 finished 信号自动 deleteLater
   }
@@ -107,8 +107,8 @@ void IOThreadPool::addClient(qintptr socketDescriptor) {
   QMetaObject::invokeMethod(selectedWorker, &IOThreadWorker::addClient,
                             Qt::QueuedConnection, socketDescriptor);
 
-  qDebug() << "[IOThreadPool] 分配客户端" << socketDescriptor
-      << "到 Worker" << selectedWorker->threadId();
+  qDebug() << "[IOThreadPool] 分配客户端" << socketDescriptor << "到 Worker"
+           << selectedWorker->threadId();
 }
 
 void IOThreadPool::sendMessage(qintptr clientId, const QString &message) {
@@ -124,7 +124,7 @@ void IOThreadPool::sendMessage(qintptr clientId, const QString &message) {
 
 void IOThreadPool::broadcastMessage(const QString &message) {
   // 直接调用每个 Worker 的 broadcastMessage
-  for (const ThreadContext &ctx: m_workers) {
+  for (const ThreadContext &ctx : m_workers) {
     QMetaObject::invokeMethod(ctx.worker, &IOThreadWorker::broadcastMessage,
                               Qt::QueuedConnection, message);
   }
@@ -142,7 +142,7 @@ void IOThreadPool::disconnectClient(qintptr clientId) {
 
 int IOThreadPool::totalClientCount() const {
   int total = 0;
-  for (const ThreadContext &ctx: m_workers) {
+  for (const ThreadContext &ctx : m_workers) {
     total += ctx.worker->clientCount();
   }
   return total;
@@ -154,7 +154,8 @@ IOThreadWorker *IOThreadPool::selectNextWorker() {
   }
 
   // 轮询策略：依次选择下一个 Worker
-  int index = m_nextWorkerIndex.fetch_add(1, std::memory_order_relaxed) % m_workers.size();
+  int index = m_nextWorkerIndex.fetch_add(1, std::memory_order_relaxed) %
+              m_workers.size();
   return m_workers[index].worker;
 }
 

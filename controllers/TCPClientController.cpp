@@ -2,15 +2,20 @@
 #include <QDateTime>
 
 TCPClientController::TCPClientController(QObject *parent)
-  : QObject(parent)
-    , m_client(new TCPClientWorker(this)) // 使用 TCPClientWorker（独立线程）
-    , m_autoReconnect(false) {
+    : QObject(parent),
+      m_client(new TCPClientWorker(this)), // 使用 TCPClientWorker（独立线程）
+      m_autoReconnect(false) {
   // 连接信号
-  connect(m_client, &TCPClientWorker::connected, this, &TCPClientController::onConnected);
-  connect(m_client, &TCPClientWorker::disconnected, this, &TCPClientController::onDisconnected);
-  connect(m_client, &TCPClientWorker::messageReceived, this, &TCPClientController::onMessageReceived);
-  connect(m_client, &TCPClientWorker::errorOccurred, this, &TCPClientController::onErrorOccurred);
-  connect(m_client, &TCPClientWorker::reconnecting, this, &TCPClientController::onReconnecting);
+  connect(m_client, &TCPClientWorker::connected, this,
+          &TCPClientController::onConnected);
+  connect(m_client, &TCPClientWorker::disconnected, this,
+          &TCPClientController::onDisconnected);
+  connect(m_client, &TCPClientWorker::messageReceived, this,
+          &TCPClientController::onMessageReceived);
+  connect(m_client, &TCPClientWorker::errorOccurred, this,
+          &TCPClientController::onErrorOccurred);
+  connect(m_client, &TCPClientWorker::reconnecting, this,
+          &TCPClientController::onReconnecting);
 }
 
 TCPClientController::~TCPClientController() = default;
@@ -19,9 +24,7 @@ bool TCPClientController::isConnected() const {
   return m_client->isConnected();
 }
 
-bool TCPClientController::autoReconnect() const {
-  return m_autoReconnect;
-}
+bool TCPClientController::autoReconnect() const { return m_autoReconnect; }
 
 void TCPClientController::setAutoReconnect(bool enable) {
   if (m_autoReconnect != enable) {
@@ -31,9 +34,7 @@ void TCPClientController::setAutoReconnect(bool enable) {
   }
 }
 
-QString TCPClientController::log() const {
-  return m_log;
-}
+QString TCPClientController::log() const { return m_log; }
 
 void TCPClientController::connectToServer(const QString &host, int port) {
   m_client->connectToServer(host, static_cast<quint16>(port));
@@ -83,7 +84,8 @@ void TCPClientController::appendLog(const QString &text) {
   }
 
   // 直接构建字符串，减少临时对象
-  m_log.append(QString("[%1] %2\n")
-    .arg(QDateTime::currentDateTime().toString("hh:mm:ss"), text));
+  m_log.append(
+      QString("[%1] %2\n")
+          .arg(QDateTime::currentDateTime().toString("hh:mm:ss"), text));
   emit logChanged();
 }

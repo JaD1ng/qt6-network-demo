@@ -1,9 +1,9 @@
 #ifndef TCPSERVERCONTROLLER_H
 #define TCPSERVERCONTROLLER_H
 
+#include "TCPServer.h"
 #include <QObject>
 #include <QString>
-#include "TCPServer.h"
 
 class TCPServerController : public QObject {
   Q_OBJECT
@@ -43,8 +43,7 @@ signals:
 
   void logChanged();
 
-private
-slots:
+private slots:
   void onServerStarted(quint16 port);
 
   void onServerStopped();

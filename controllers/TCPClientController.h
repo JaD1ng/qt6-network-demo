@@ -1,16 +1,17 @@
 #ifndef TCPCLIENTCONTROLLER_H
 #define TCPCLIENTCONTROLLER_H
 
+#include "TCPClientWorker.h"
 #include <QObject>
 #include <QString>
-#include "TCPClientWorker.h"
 
 class TCPClientController : public QObject {
   Q_OBJECT
 
   Q_PROPERTY(bool isConnected READ isConnected NOTIFY connectedChanged)
 
-  Q_PROPERTY(bool autoReconnect READ autoReconnect WRITE setAutoReconnect NOTIFY autoReconnectChanged)
+  Q_PROPERTY(bool autoReconnect READ autoReconnect WRITE setAutoReconnect NOTIFY
+                 autoReconnectChanged)
 
   Q_PROPERTY(QString log READ log NOTIFY logChanged)
 
@@ -43,8 +44,7 @@ signals:
 
   void logChanged();
 
-private
-slots:
+private slots:
   void onConnected();
 
   void onDisconnected();
@@ -60,8 +60,8 @@ private:
 
 private:
   TCPClientWorker *m_client; // 使用 TCPClientWorker（独立线程）
-  bool m_autoReconnect;
   QString m_log;
+  bool m_autoReconnect;
 };
 
 #endif // TCPCLIENTCONTROLLER_H

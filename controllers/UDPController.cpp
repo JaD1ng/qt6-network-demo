@@ -2,40 +2,35 @@
 #include <QDateTime>
 
 UDPController::UDPController(QObject *parent)
-  : QObject(parent)
-    , m_udp(new UDPClientServer(this)) {
+    : QObject(parent), m_udp(new UDPClientServer(this)) {
   // 连接信号
   connect(m_udp, &UDPClientServer::bound, this, &UDPController::onBound);
   connect(m_udp, &UDPClientServer::unbound, this, &UDPController::onUnbound);
-  connect(m_udp, &UDPClientServer::messageReceived, this, &UDPController::onMessageReceived);
-  connect(m_udp, &UDPClientServer::errorOccurred, this, &UDPController::onErrorOccurred);
+  connect(m_udp, &UDPClientServer::messageReceived, this,
+          &UDPController::onMessageReceived);
+  connect(m_udp, &UDPClientServer::errorOccurred, this,
+          &UDPController::onErrorOccurred);
 }
 
 UDPController::~UDPController() = default;
 
-bool UDPController::isBound() const {
-  return m_udp->isBound();
-}
+bool UDPController::isBound() const { return m_udp->isBound(); }
 
-int UDPController::localPort() const {
-  return m_udp->localPort();
-}
+int UDPController::localPort() const { return m_udp->localPort(); }
 
-QString UDPController::log() const {
-  return m_log;
-}
+QString UDPController::log() const { return m_log; }
 
-void UDPController::bind(int port) {
-  m_udp->bind(static_cast<quint16>(port));
-}
+void UDPController::bind(int port) { m_udp->bind(static_cast<quint16>(port)); }
 
-void UDPController::unbind() {
-  m_udp->unbind();
-}
+void UDPController::unbind() { m_udp->unbind(); }
 
-void UDPController::sendMessage(const QString &message, const QString &targetHost, int targetPort) {
+void UDPController::sendMessage(const QString &message,
+                                const QString &targetHost, int targetPort) {
   m_udp->sendMessage(message, targetHost, static_cast<quint16>(targetPort));
-  appendLog(QString("[UDP] 发送至 %1:%2 - %3").arg(targetHost).arg(targetPort).arg(message));
+  appendLog(QString("[UDP] 发送至 %1:%2 - %3")
+                .arg(targetHost)
+                .arg(targetPort)
+                .arg(message));
 }
 
 void UDPController::sendBroadcast(const QString &message, int targetPort) {
@@ -60,8 +55,13 @@ void UDPController::onUnbound() {
   emit localPortChanged();
 }
 
-void UDPController::onMessageReceived(const QString &message, const QString &senderAddress, quint16 senderPort) {
-  appendLog(QString("[UDP] 收到 %1:%2 - %3").arg(senderAddress).arg(senderPort).arg(message));
+void UDPController::onMessageReceived(const QString &message,
+                                      const QString &senderAddress,
+                                      quint16 senderPort) {
+  appendLog(QString("[UDP] 收到 %1:%2 - %3")
+                .arg(senderAddress)
+                .arg(senderPort)
+                .arg(message));
 }
 
 void UDPController::onErrorOccurred(const QString &error) {

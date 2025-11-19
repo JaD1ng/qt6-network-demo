@@ -1,10 +1,10 @@
 #ifndef UDPCLIENTSERVER_H
 #define UDPCLIENTSERVER_H
 
-#include <QObject>
-#include <QUdpSocket>
-#include <QString>
 #include <QHostAddress>
+#include <QObject>
+#include <QString>
+#include <QUdpSocket>
 
 /**
  * @brief UDP 客户端/服务器类，基于 Qt 事件循环的单线程异步模型
@@ -35,7 +35,8 @@ public:
   void unbind();
 
   // 发送单播消息
-  void sendMessage(const QString &message, const QString &targetHost, quint16 targetPort);
+  void sendMessage(const QString &message, const QString &targetHost,
+                   quint16 targetPort);
 
   // 发送广播消息
   void sendBroadcast(const QString &message, quint16 targetPort);
@@ -54,7 +55,8 @@ signals:
   void unbound();
 
   // 接收到消息
-  void messageReceived(const QString &message, const QString &senderAddress, quint16 senderPort);
+  void messageReceived(const QString &message, const QString &senderAddress,
+                       quint16 senderPort);
 
   // 错误信息
   void errorOccurred(const QString &error);

@@ -2,7 +2,6 @@
 #define IOTHREADPOOL_H
 
 #include "IOThreadWorker.h"
-
 #include <QHash>
 #include <QList>
 #include <QObject>

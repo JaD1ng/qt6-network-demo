@@ -1,10 +1,10 @@
 #ifndef CLIENTHANDLER_H
 #define CLIENTHANDLER_H
 
-#include <QObject>
-#include <QTcpSocket>
 #include <QByteArray>
+#include <QObject>
 #include <QString>
+#include <QTcpSocket>
 
 /**
  * @brief 客户端连接处理类，运行在独立的 I/O 线程中
@@ -74,9 +74,9 @@ private:
   void parseReceivedData();
 
   qintptr m_socketDescriptor; // Socket 描述符
-  QTcpSocket *m_socket; // TCP Socket（在目标线程中创建）
+  QTcpSocket *m_socket;       // TCP Socket（在目标线程中创建）
   QByteArray m_receiveBuffer; // 接收缓冲区
-  QString m_clientAddress; // 客户端地址缓存
+  QString m_clientAddress;    // 客户端地址缓存
 };
 
 #endif // CLIENTHANDLER_H

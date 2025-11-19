@@ -1,12 +1,12 @@
 #ifndef TCPCLIENT_H
 #define TCPCLIENT_H
 
-#include <QObject>
-#include <QTcpSocket>
-#include <QString>
-#include <QTimer>
 #include <QByteArray>
 #include <QDataStream>
+#include <QObject>
+#include <QString>
+#include <QTcpSocket>
+#include <QTimer>
 
 /**
  * @brief TCP 客户端类，基于 Qt 事件循环的单线程异步模型
@@ -73,8 +73,7 @@ signals:
   // 正在重连
   void reconnecting();
 
-private
-slots:
+private slots:
   // 处理连接成功
   void onConnected();
 
@@ -94,12 +93,13 @@ private:
   QTcpSocket *m_socket;
   QTimer *m_reconnectTimer;
   QByteArray m_receiveBuffer; // 接收缓冲区，处理半包
-
   QString m_host;
+
+  int m_reconnectInterval;
+
   quint16 m_port;
 
   bool m_autoReconnect;
-  int m_reconnectInterval;
   bool m_isManualDisconnect; // 标记是否为手动断开
 };
 

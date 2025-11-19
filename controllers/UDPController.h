@@ -1,9 +1,9 @@
 #ifndef UDPCONTROLLER_H
 #define UDPCONTROLLER_H
 
+#include "UDPClientServer.h"
 #include <QObject>
 #include <QString>
-#include "UDPClientServer.h"
 
 class UDPController : public QObject {
   Q_OBJECT
@@ -30,7 +30,8 @@ public:
 
   Q_INVOKABLE void unbind();
 
-  Q_INVOKABLE void sendMessage(const QString &message, const QString &targetHost, int targetPort);
+  Q_INVOKABLE void sendMessage(const QString &message,
+                               const QString &targetHost, int targetPort);
 
   Q_INVOKABLE void sendBroadcast(const QString &message, int targetPort);
 
@@ -43,20 +44,19 @@ signals:
 
   void logChanged();
 
-private
-slots:
+private slots:
   void onBound(quint16 port);
 
   void onUnbound();
 
-  void onMessageReceived(const QString &message, const QString &senderAddress, quint16 senderPort);
+  void onMessageReceived(const QString &message, const QString &senderAddress,
+                         quint16 senderPort);
 
   void onErrorOccurred(const QString &error);
 
 private:
   void appendLog(const QString &text);
 
-private:
   UDPClientServer *m_udp;
   QString m_log;
 };

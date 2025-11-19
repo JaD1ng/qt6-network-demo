@@ -2,8 +2,8 @@
 #define TCPCLIENTWORKER_H
 
 #include <QObject>
-#include <QThread>
 #include <QString>
+#include <QThread>
 
 class TCPClient;
 
@@ -69,8 +69,8 @@ private slots:
 
 private:
   QThread *m_workerThread; // 工作线程
-  TCPClient *m_client; // TCP 客户端（在工作线程中）
-  bool m_isConnected; // 缓存的连接状态（避免跨线程阻塞调用）
+  TCPClient *m_client;     // TCP 客户端（在工作线程中）
+  bool m_isConnected;      // 缓存的连接状态（避免跨线程阻塞调用）
 };
 
 #endif // TCPCLIENTWORKER_H

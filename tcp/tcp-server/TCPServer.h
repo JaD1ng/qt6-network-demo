@@ -1,8 +1,8 @@
 #ifndef TCPSERVER_H
 #define TCPSERVER_H
 
-#include <QTcpServer>
 #include <QString>
+#include <QTcpServer>
 
 class IOThreadPool;
 

@@ -2,16 +2,21 @@
 #include <QDateTime>
 
 TCPServerController::TCPServerController(QObject *parent)
-  : QObject(parent)
-    , m_server(new TCPServer(0, this)) {
+    : QObject(parent), m_server(new TCPServer(0, this)) {
   // 使用默认线程数（基于CPU核心数）
   // 连接信号
-  connect(m_server, &TCPServer::serverStarted, this, &TCPServerController::onServerStarted);
-  connect(m_server, &TCPServer::serverStopped, this, &TCPServerController::onServerStopped);
-  connect(m_server, &TCPServer::clientConnected, this, &TCPServerController::onClientConnected);
-  connect(m_server, &TCPServer::clientDisconnected, this, &TCPServerController::onClientDisconnected);
-  connect(m_server, &TCPServer::messageReceived, this, &TCPServerController::onMessageReceived);
-  connect(m_server, &TCPServer::errorOccurred, this, &TCPServerController::onErrorOccurred);
+  connect(m_server, &TCPServer::serverStarted, this,
+          &TCPServerController::onServerStarted);
+  connect(m_server, &TCPServer::serverStopped, this,
+          &TCPServerController::onServerStopped);
+  connect(m_server, &TCPServer::clientConnected, this,
+          &TCPServerController::onClientConnected);
+  connect(m_server, &TCPServer::clientDisconnected, this,
+          &TCPServerController::onClientDisconnected);
+  connect(m_server, &TCPServer::messageReceived, this,
+          &TCPServerController::onMessageReceived);
+  connect(m_server, &TCPServer::errorOccurred, this,
+          &TCPServerController::onErrorOccurred);
 }
 
 TCPServerController::~TCPServerController() = default;
@@ -20,23 +25,18 @@ bool TCPServerController::isListening() const {
   return m_server->isListening();
 }
 
-int TCPServerController::clientCount() const {
-  return m_server->clientCount();
-}
+int TCPServerController::clientCount() const { return m_server->clientCount(); }
 
-QString TCPServerController::log() const {
-  return m_log;
-}
+QString TCPServerController::log() const { return m_log; }
 
 void TCPServerController::startServer(int port) {
   m_server->startServer(static_cast<quint16>(port));
 }
 
-void TCPServerController::stopServer() {
-  m_server->stopServer();
-}
+void TCPServerController::stopServer() { m_server->stopServer(); }
 
-void TCPServerController::sendMessage(qintptr clientId, const QString &message) {
+void TCPServerController::sendMessage(qintptr clientId,
+                                      const QString &message) {
   m_server->sendMessage(clientId, message);
 }
 
@@ -60,7 +60,8 @@ void TCPServerController::onServerStopped() {
   emit clientCountChanged();
 }
 
-void TCPServerController::onClientConnected(qintptr clientId, const QString &address) {
+void TCPServerController::onClientConnected(qintptr clientId,
+                                            const QString &address) {
   appendLog(QString("[客户端 %1] 已连接 %2").arg(clientId).arg(address));
   emit clientCountChanged();
 }
@@ -70,7 +71,8 @@ void TCPServerController::onClientDisconnected(qintptr clientId) {
   emit clientCountChanged();
 }
 
-void TCPServerController::onMessageReceived(qintptr clientId, const QString &message) {
+void TCPServerController::onMessageReceived(qintptr clientId,
+                                            const QString &message) {
   appendLog(QString("[客户端 %1] 收到: %2").arg(clientId).arg(message));
 }
 

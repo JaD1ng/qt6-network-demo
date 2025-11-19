@@ -1,13 +1,11 @@
 #include "ClientHandler.h"
-#include <QDebug>
-#include <QThread>
-#include <QHostAddress>
 #include <QDataStream>
+#include <QDebug>
+#include <QHostAddress>
+#include <QThread>
 
 ClientHandler::ClientHandler(qintptr socketDescriptor, QObject *parent)
-  : QObject(parent)
-    , m_socketDescriptor(socketDescriptor)
-    , m_socket(nullptr) {
+    : QObject(parent), m_socketDescriptor(socketDescriptor), m_socket(nullptr) {
   // 预分配接收缓冲区
   m_receiveBuffer.reserve(4096);
 }
@@ -26,7 +24,8 @@ void ClientHandler::initialize() {
 
   // 使用 socket 描述符设置连接
   if (!m_socket->setSocketDescriptor(m_socketDescriptor)) {
-    qWarning() << "[ClientHandler] 设置 socket 描述符失败:" << m_socketDescriptor;
+    qWarning() << "[ClientHandler] 设置 socket 描述符失败:"
+               << m_socketDescriptor;
     emit errorOccurred(m_socketDescriptor, "设置 socket 描述符失败");
     deleteLater();
     return;
@@ -34,7 +33,8 @@ void ClientHandler::initialize() {
 
   // 连接信号
   connect(m_socket, &QTcpSocket::readyRead, this, &ClientHandler::onReadyRead);
-  connect(m_socket, &QTcpSocket::disconnected, this, &ClientHandler::onDisconnected);
+  connect(m_socket, &QTcpSocket::disconnected, this,
+          &ClientHandler::onDisconnected);
   connect(m_socket, &QTcpSocket::errorOccurred, this, &ClientHandler::onError);
 
   // 获取并缓存客户端地址
@@ -54,10 +54,12 @@ void ClientHandler::initialize() {
   }
 
   // 构建完整地址字符串
-  m_clientAddress = QString("%1:%2").arg(clientAddressStr).arg(m_socket->peerPort());
+  m_clientAddress =
+      QString("%1:%2").arg(clientAddressStr).arg(m_socket->peerPort());
 
-  qDebug() << "[ClientHandler]" << m_socketDescriptor << "初始化完成，地址:" << m_clientAddress
-      << "线程:" << QThread::currentThread();
+  qDebug() << "[ClientHandler]" << m_socketDescriptor
+           << "初始化完成，地址:" << m_clientAddress
+           << "线程:" << QThread::currentThread();
 
   // 发出就绪信号
   emit ready(m_socketDescriptor, m_clientAddress);
@@ -65,7 +67,8 @@ void ClientHandler::initialize() {
 
 void ClientHandler::sendMessage(const QString &message) {
   if (!m_socket || m_socket->state() != QAbstractSocket::ConnectedState) {
-    qWarning() << "[ClientHandler]" << m_socketDescriptor << "socket 未连接，无法发送消息";
+    qWarning() << "[ClientHandler]" << m_socketDescriptor
+               << "socket 未连接，无法发送消息";
     return;
   }
 
@@ -77,8 +80,8 @@ void ClientHandler::sendMessage(const QString &message) {
     qWarning() << "[ClientHandler]" << m_socketDescriptor << "发送消息不完整";
     emit errorOccurred(m_socketDescriptor, "发送消息不完整");
   } else {
-    qDebug() << "[ClientHandler]" << m_socketDescriptor << "发送消息:" << message
-        << "(字节数:" << packet.size() << ")";
+    qDebug() << "[ClientHandler]" << m_socketDescriptor
+             << "发送消息:" << message << "(字节数:" << packet.size() << ")";
   }
 }
 
@@ -122,7 +125,8 @@ void ClientHandler::parseReceivedData() {
     // 检查消息长度合法性
     constexpr quint32 MAX_MESSAGE_SIZE = 10 * 1024 * 1024; // 10MB上限
     if (messageLength > MAX_MESSAGE_SIZE) {
-      qWarning() << "[ClientHandler]" << m_socketDescriptor << "收到的消息过大:" << messageLength;
+      qWarning() << "[ClientHandler]" << m_socketDescriptor
+                 << "收到的消息过大:" << messageLength;
       emit errorOccurred(m_socketDescriptor, "消息过大，断开连接");
       m_socket->disconnectFromHost();
       return;
@@ -132,8 +136,9 @@ void ClientHandler::parseReceivedData() {
     int totalSize = static_cast<int>(sizeof(quint32) + messageLength);
     if (m_receiveBuffer.size() < totalSize) {
       // 数据不完整，等待更多数据
-      qDebug() << "[ClientHandler]" << m_socketDescriptor << "数据不完整，等待..."
-          << "已接收:" << m_receiveBuffer.size() << "需要:" << totalSize;
+      qDebug() << "[ClientHandler]" << m_socketDescriptor
+               << "数据不完整，等待..."
+               << "已接收:" << m_receiveBuffer.size() << "需要:" << totalSize;
 
       // 预留足够空间，避免后续频繁分配
       if (m_receiveBuffer.capacity() < totalSize) {
@@ -143,30 +148,31 @@ void ClientHandler::parseReceivedData() {
     }
 
     // 提取消息内容（跳过前4字节的长度字段）
-    QString message = QString::fromUtf8(m_receiveBuffer.constData() + sizeof(quint32), messageLength);
+    QString message = QString::fromUtf8(
+        m_receiveBuffer.constData() + sizeof(quint32), messageLength);
 
     // 从缓冲区移除已处理的消息（处理黏包）
     m_receiveBuffer.remove(0, totalSize);
 
     // 发出消息信号
     if (!message.isEmpty()) {
-      qDebug() << "[ClientHandler]" << m_socketDescriptor << "收到完整消息:" << message;
+      qDebug() << "[ClientHandler]" << m_socketDescriptor
+               << "收到完整消息:" << message;
       emit messageReceived(m_socketDescriptor, message);
     }
   }
 
   // 缓冲区缩容策略：如果缓冲区空闲空间过大（>8KB）且已用空间较小，则缩容
   constexpr int SHRINK_THRESHOLD = 8192;
-  if (m_receiveBuffer.capacity() > SHRINK_THRESHOLD && m_receiveBuffer.size() < 1024) {
+  if (m_receiveBuffer.capacity() > SHRINK_THRESHOLD &&
+      m_receiveBuffer.size() < 1024) {
     QByteArray temp(m_receiveBuffer);
     m_receiveBuffer = std::move(temp);
     m_receiveBuffer.reserve(4096); // 恢复初始容量
   }
 }
 
-void ClientHandler::onReadyRead() {
-  parseReceivedData();
-}
+void ClientHandler::onReadyRead() { parseReceivedData(); }
 
 void ClientHandler::onDisconnected() {
   qDebug() << "[ClientHandler]" << m_socketDescriptor << "断开连接";
@@ -185,6 +191,7 @@ void ClientHandler::onError(QAbstractSocket::SocketError socketError) {
   }
 
   QString errorString = m_socket->errorString();
-  qWarning() << "[ClientHandler]" << m_socketDescriptor << "错误:" << errorString;
+  qWarning() << "[ClientHandler]" << m_socketDescriptor
+             << "错误:" << errorString;
   emit errorOccurred(m_socketDescriptor, errorString);
 }
