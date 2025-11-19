@@ -104,7 +104,7 @@ void TCPClient::parseReceivedData() {
   m_receiveBuffer.append(m_socket->readAll());
 
   // 循环解析完整的消息
-  while (m_receiveBuffer.size() >= static_cast<int>(sizeof(quint32))) {
+  while (m_receiveBuffer.size() >= static_cast<qsizetype>(sizeof(quint32))) {
     // 读取消息长度（前4字节，大端）
     QDataStream stream(m_receiveBuffer);
     stream.setByteOrder(QDataStream::BigEndian);
