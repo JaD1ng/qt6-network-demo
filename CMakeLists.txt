@@ -27,10 +27,16 @@ add_subdirectory(tcp)
 add_subdirectory(udp)
 add_subdirectory(controllers)
 
+# 为 Windows 可执行文件设置图标
+if (WIN32)
+    set(APP_ICON_RESOURCE icon.ico)
+endif()
+
 # 主可执行文件
 qt_add_executable(tcp_udp_demo
         main.cpp
         resources.qrc
+        ${APP_ICON_RESOURCE}
 )
 
 # 设置可执行文件输出目录
